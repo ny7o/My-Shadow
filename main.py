@@ -1,130 +1,127 @@
 import pygame
 
-pygame.init()
-
-screen_width = 1920
-screen_height = 1080
-
-screen = pygame.display.set_mode((screen_width, screen_height))
-pygame.display.set_caption("My Shadow")
-
-tile_size = 216
-
-bg_img = pygame.image.load("res/BG.jpg")
-
-camera_x = 0
-
-
-class Player:
-    def __init__(self, x, y):
-        img = pygame.image.load("res/Ground.png")
-        self.image = pygame.transform.scale(img, (96, 216))
-        self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-        self.vel_y = 0
-        self.jumped = False
-
-    def update(self):
-        dx = 0
-        dy = 0
-
-        key = pygame.key.get_pressed()
-        if key[pygame.K_SPACE] and self.jumped is False:
-            self.vel_y = -15
-            self.jumped = True
-        if key[pygame.K_SPACE]:
-            self.jumped = False
-        #if key[pygame.K_a]:
-            #dx -= 5
-        #if key[pygame.K_d]:
-            #dx += 5
-
-        self.vel_y += 1
-        if self.vel_y > 10:
-            self.vel_y = 10
-        dy += self.vel_y
-
-        for tile in world.tile_list:
-            rect = tile.__getitem__(1).__copy__()
-            rect.x += camera_x
-
-            if rect.colliderect(self.rect.x, self.rect.y + dy, self.width, self.height):
-                if self.vel_y < 0:
-                    dy = tile[1].bottom - self.rect.top
-                if self.vel_y >= 0:
-                    dy = tile[1].top - self.rect.bottom
-
-        self.rect.x += dx
-        self.rect.y += dy
-
-        screen.blit(self.image, self.rect)
-
 
 class World:
-    def __init__(self, data):
-        self.tile_list = []
+    def __init__(self):
+        self.game_objects = []
 
-        img = pygame.image.load("res/Ground.png")
-
-        block_img = pygame.image.load("res/Ground.png")
-
-        row_count = 0
-        for row in data:
-            col_count = 0
-            for tile in row:
-                if tile == 1:
-                    img = pygame.transform.scale(block_img, (tile_size, tile_size))
-                    img_rect = img.get_rect()
-                    img_rect.x = (col_count * tile_size) + camera_x
-                    img_rect.y = row_count * tile_size
-                    tile = (img, img_rect)
-                    self.tile_list.append(tile)
-                col_count += 1
-            row_count += 1
-
-    def draw(self):
-        for tile in self.tile_list:
-            new = tile.__getitem__(1).__copy__()
-            new.x += camera_x
-
-            screen.blit(tile[0], new)
+    def add(self, game_object):
+        self.game_objects.append(game_object)
 
 
-world_data = [
-    [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-]
+class Camera:
+    def __init__(self, screen, target_game_object):
+        self.screen = screen
+        self.target_game_object = target_game_object
 
-player = Player(screen_width / 2, screen_height - 432)
-world = World(world_data)
+    def update(self):
+        target_pos = self.target_game_object.rectangel.move(
+            -self.screen.get_width() // 2 + self.target_game_object.rectangel.width // 2,
+            -self.screen.get_height() // 2 + self.target_game_object.rectangel.height // 2
+        )
+        
+        for game_object in self.target_game_object.world.game_objects:
+            self.screen.blit(
+                game_object.surface,
+                game_object.rectangel.move(-target_pos.x, -target_pos.y)
+            )
 
-run = True
-while run:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
 
-    screen.blit(bg_img, (0, 0))
+class GameObject(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y, size_x, size_y, world):
+        super().__init__()
+        self.world = world
+        self.world.add(self)
+        self.surface = pygame.Surface((size_x, size_y))
+        self.rectangel = self.surface.get_rect()
+        self.rectangel.x = pos_x
+        self.rectangel.y = pos_y
 
-    key = pygame.key.get_pressed()
-    if key[pygame.K_a]:
-        camera_x += 10
-    if key[pygame.K_d]:
-        camera_x -= 10
 
-    world.draw()
-    player.update()
+class Entity(GameObject):
+    def __init__(self, pos_x, pos_y, size_x, size_y, world):
+        super().__init__(pos_x, pos_y, size_x, size_y, world)
+        self.speed = 10
 
-    pygame.display.update()
 
-pygame.quit()
+class Player(Entity):
+    def __init__(self, pos_x, pos_y, size_x, size_y, world):
+        super().__init__(pos_x, pos_y, size_x, size_y, world)
+        self.vertical_speed = 0
+        self.jump_strength = 20
+        self.gravity = 1
+        self.is_jumping = False
+
+    def update(self):
+        pressed_keys = pygame.key.get_pressed()
+        x_move, y_move = 0, 0
+
+        if pressed_keys[pygame.K_LEFT]:
+            x_move = -self.speed
+        if pressed_keys[pygame.K_RIGHT]:
+            x_move = self.speed
+
+        if pressed_keys[pygame.K_SPACE] and not self.is_jumping:
+            self.vertical_speed = -self.jump_strength
+            self.is_jumping = True
+
+        self.vertical_speed += self.gravity
+        y_move = self.vertical_speed
+
+        new_rect_x = self.rectangel.move(x_move, 0)
+        new_rect_y = self.rectangel.move(0, y_move)
+
+        for game_object in self.world.game_objects:
+            if game_object is not self:
+                if new_rect_x.colliderect(game_object.rectangel):
+                    x_move = 0
+                if new_rect_y.colliderect(game_object.rectangel):
+                    if self.rectangel.top < game_object.rectangel.bottom and self.vertical_speed > 0:
+                        self.vertical_speed = 0
+                        self.is_jumping = False
+                    y_move = 0
+
+        self.rectangel.move_ip(x_move, y_move)
+
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((800, 600), pygame.RESIZABLE)
+
+    world = World()
+    player = Player(0, 0, 50, 50, world)
+    player.surface.fill((255, 0, 0))
+    camera = Camera(screen, player)
+    
+    entity = Entity(-80, 80, 1000, 60, world)
+    entity.surface.fill((0, 255, 0))
+    new_entity = Entity(-60, 20, 60, 60, world)
+    new_entity.surface.fill((0, 255, 0))
+    new_entity_2 = Entity(-40, -100, 60, 60, world)
+    new_entity_2.surface.fill((0, 255, 0))
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+
+        player.update()
+        screen.fill((0, 0, 0))
+        
+        pressed_keys = pygame.key.get_pressed()
+        if pressed_keys[pygame.K_1]:
+            camera.target_game_object = new_entity_2
+        if pressed_keys[pygame.K_2]:
+            camera.target_game_object = player
+        
+        camera.update()
+        
+        pygame.display.flip()
+        pygame.time.Clock().tick(60)
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
